@@ -1,0 +1,78 @@
+name: librium
+description: "An application that parses HTTP requests from the Librus Synergia service and displays them in a user-friendly interface"
+
+publish_to: 'none' # Dont remove this line
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 0.1.0-alpha+1
+
+environment:
+  sdk: ^3.8.1
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  dio: ^5.9.0
+  dio_cookie_manager: ^3.3.0
+  cookie_jar: ^4.0.8
+  path_provider: ^2.1.5
+  flutter_secure_storage: ^9.2.4
+  html: ^0.15.6
+  provider: ^6.1.5+1
+  url_launcher: ^6.3.2
+  flutter_svg: ^2.2.1
+  swipeable_page_route: ^0.4.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.14.4
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: fonts/Inter_18pt-Regular.ttf
+        - asset: fonts/Inter_18pt-Medium.ttf
+          weight: 500
+        - asset: fonts/Inter_18pt-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Inter_18pt-Bold.ttf
+          weight: 700
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon.png"
+  adaptive_icon_foreground: "assets/icon_logo.png"
+  adaptive_icon_background: "#ff7e57c2"
+  adaptive_icon_monochrome: "assets/icon_logo.png"
