@@ -280,6 +280,25 @@ extension Inbox on Librus {
 
     return data;
   }
+  Future<int?> getReceiverIdInReply(final int? folderId, final int? messageId) async {
+    if (folderId == null || messageId == null) return null;
+
+    try {
+      final response = await _dio.get("$baseServerUrl/wiadomosci/3/$folderId/$messageId");
+
+      final document = html_parser.parse(response.data);
+      final input = document.querySelector("input[name='DoKogo']");
+
+      if (input == null) return null;
+
+      final int? receiverId = int.tryParse(input.attributes["value"] ?? "");
+
+      return receiverId;
+    }
+    catch (e) {
+      return null;
+    }
+  }
   Map<String, dynamic>? _parseInboxRow(final row) {
     final cells = row.querySelectorAll("td");
 

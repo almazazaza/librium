@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import 'package:librium/core/constants/app_theme.dart';
 import 'package:librium/core/services/librus/api.dart';
 import 'package:librium/shared/widgets/fullscreen_loader.dart';
 
+import 'send_message_page.dart';
 import '../data/build_message.dart';
 
 class MessagePage extends StatefulWidget {
@@ -63,6 +65,43 @@ class _MessagePageState extends State<MessagePage> {
       children: [
         Scaffold(
           appBar: AppBar(),
+          floatingActionButton: widget.folderId == 5
+            ? FloatingActionButton(
+              onPressed: () async {
+                final librus = Provider.of<Librus>(context, listen: false);
+
+                final receiverId = await librus.getReceiverIdInReply(
+                  widget.folderId,
+                  widget.messageId
+                );
+
+                if (!context.mounted) return;
+                
+                final result = await Navigator.of(context).push(
+                  SwipeablePageRoute(
+                    builder: (_) => SendMessagePage(
+                      messageData: {
+                        "receiverId": receiverId,
+                        "receiver": _message?["meta"]?["sender"],
+                        "topic": _message?["meta"]?["topic"],
+                        "content": _message?["plainText"],
+                        "sentAt": _message?["meta"]?["sent"]
+                      },
+                    ),
+                    backGestureDetectionWidth: MediaQuery.of(context).size.width
+                  )
+                );
+
+                if (result != null && context.mounted) {
+                  Navigator.pop(context, result);
+                }
+              },
+              child: Icon(
+                Icons.reply_outlined,
+                color: theme.colorScheme.onSurface,
+              ),
+            )
+            : null,
           body: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -107,10 +146,11 @@ class _MessagePageState extends State<MessagePage> {
                             height: 1
                           ),
                           SizedBox(height: 10),
-                          RichText(
-                            text: TextSpan(
+                          SelectableText.rich(
+                            TextSpan(
                               style: TextStyle(
                                 color: theme.appBarTheme.foregroundColor,
+                                decoration: TextDecoration.none,
                                 fontSize: 14,
                               ),
                               children: buildTextSpans(

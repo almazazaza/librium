@@ -18,6 +18,7 @@ class LinkedTextSpan extends TextSpan {
         color: color ?? AppTheme().themeData.colorScheme.primary,
         fontSize: fontSize,
         decoration: decoration,
+        decorationColor: color ?? AppTheme().themeData.colorScheme.primary
       ),
       recognizer: TapGestureRecognizer()
         ..onTap = () {
@@ -38,6 +39,7 @@ class EmailTextSpan extends TextSpan {
         color: color ?? AppTheme().themeData.colorScheme.primary,
         fontSize: fontSize,
         decoration: decoration,
+        decorationColor: color ?? AppTheme().themeData.colorScheme.primary
       ),
       recognizer: TapGestureRecognizer()
         ..onTap = () {

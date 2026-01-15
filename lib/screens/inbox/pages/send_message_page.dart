@@ -8,11 +8,15 @@ import 'package:librium/core/services/librus/api.dart';
 import 'package:librium/shared/widgets/fullscreen_loader.dart';
 import 'package:librium/shared/widgets/message_banner.dart';
 
+import '../data/add_reply_prefix.dart';
 import 'user_select_page.dart';
 
 class SendMessagePage extends StatefulWidget {
+  final Map<String, dynamic>? messageData;
+
   const SendMessagePage({
-    super.key
+    super.key,
+    this.messageData
   });
 
   @override
@@ -22,15 +26,40 @@ class _SendMessagePageState extends State<SendMessagePage> {
   final _formKey = GlobalKey<FormState>();
   final _topicController = TextEditingController();
   final _contentController = TextEditingController();
+  
   late FocusNode _topicFocusNode;
   late FocusNode _contentFocusNode;
-  Map<String, dynamic>? _selectedUser;
-  bool _isLoading = false;
+
   String? _errorMessage;
+  Map<String, dynamic>? _selectedUser;
+
+  bool _isLoading = false;
+  bool get _isReply => widget.messageData != null;
 
   @override
   void initState() {
     super.initState();
+
+    if (widget.messageData != null) {
+      final data = widget.messageData!;
+
+      final topic = data["topic"].toString();
+      final content = data["content"].toString();
+
+      _topicController.text = withReplyPrefix(topic);
+      _contentController.text = buildQuotedMessage(
+        sender: data["receiver"].toString(),
+        dateTime: data["sentAt"].toString(),
+        content: content
+      );
+
+      if (data["receiverId"] != null && data["receiver"] != null) {
+        _selectedUser = {
+          "id": data["receiverId"],
+          "fullName": data["receiver"],
+        };
+      }
+    }
     _topicFocusNode = FocusNode();
     _contentFocusNode = FocusNode();
 
@@ -43,6 +72,10 @@ class _SendMessagePageState extends State<SendMessagePage> {
       if (!_contentFocusNode.hasFocus) {
         _contentFocusNode.unfocus();
       }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _contentController.selection = const TextSelection.collapsed(offset: 0);
     });
   }
 
@@ -136,6 +169,8 @@ class _SendMessagePageState extends State<SendMessagePage> {
   }
 
   void _openUserSelection() async {
+    if (_isReply) return;
+
     final user = await Navigator.of(context).push(
       SwipeablePageRoute(
         builder: (_) => UserSelectPage(),
@@ -203,30 +238,33 @@ class _SendMessagePageState extends State<SendMessagePage> {
                   child: Column(
                     children: [
                       InkWell(
-                        onTap: _openUserSelection,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                _selectedUser?["fullName"] ?? "Wybierz odbiorcę",
-                                style: TextStyle(
-                                  fontSize: 16,
+                        onTap: _isReply ? null : _openUserSelection,
+                        child: Opacity(
+                          opacity: _isReply ? 0.6 : 1.0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _selectedUser?["fullName"] ?? "Wybierz odbiorcę",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: _selectedUser != null
+                                      ? theme.colorScheme.onSurface
+                                      : theme.hintColor
+                                  ),
+                                ),
+                                Icon(
+                                  _isReply ? Icons.reply_outlined : Icons.arrow_forward_ios,
+                                  size: 16,
                                   color: _selectedUser != null
                                     ? theme.colorScheme.onSurface
                                     : theme.hintColor
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: _selectedUser != null
-                                  ? theme.colorScheme.onSurface
-                                  : theme.hintColor
-                              )
-                            ]
-                          )
+                                )
+                              ]
+                            )
+                          ),
                         )
                       ),
                       const SizedBox(height: 10),
