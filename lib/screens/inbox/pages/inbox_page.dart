@@ -93,8 +93,8 @@ class _InboxPageState extends State<InboxPage> with SingleTickerProviderStateMix
         return InboxMessageTile(
           message: message,
           theme: theme,
-          onTap: () {
-            Navigator.of(context).push(
+          onTap: () async {
+            final result = await Navigator.of(context).push(
               SwipeablePageRoute(
                 builder: (_) => MessagePage(
                   folderId: message["folderId"],
@@ -103,6 +103,20 @@ class _InboxPageState extends State<InboxPage> with SingleTickerProviderStateMix
                 backGestureDetectionWidth: MediaQuery.of(context).size.width
               )
             );
+
+            if (result != null && result["success"] == true) {
+              final receiver = result["receiver"];
+
+              setState(() => _successBanner = "Wysłano odpowiedź do ${receiver["fullName"]}");
+              
+              await _loadInbox();
+
+              Future.delayed(const Duration(seconds: 4), () {
+                if (mounted) {
+                  setState(() => _successBanner = null);
+                }
+              });
+            }
           }
         );
       }
