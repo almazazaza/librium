@@ -9,6 +9,7 @@ import 'package:librium/shared/widgets/fullscreen_loader.dart';
 
 import 'send_message_page.dart';
 import '../data/build_message.dart';
+import '../widgets/build_files_list.dart';
 
 class MessagePage extends StatefulWidget {
   final int? folderId;
@@ -85,7 +86,7 @@ class _MessagePageState extends State<MessagePage> {
                         "receiver": _message?["meta"]?["sender"],
                         "topic": _message?["meta"]?["topic"],
                         "content": _message?["plainText"],
-                        "sentAt": _message?["meta"]?["sent"]
+                        "sentAt": _message?["meta"]?["sentAt"]
                       },
                     ),
                     backGestureDetectionWidth: MediaQuery.of(context).size.width
@@ -134,7 +135,7 @@ class _MessagePageState extends State<MessagePage> {
                             )
                           ),
                           Text(
-                            _message?["meta"]?["sent"] ?? "",
+                            _message?["meta"]?["sentAt"] ?? "",
                             style: TextStyle(
                               fontSize: 14,
                               color: theme.hintColor
@@ -159,7 +160,9 @@ class _MessagePageState extends State<MessagePage> {
                                 theme: theme
                               )
                             )
-                          )
+                          ),
+                          if (_message?["files"] != null && _message?["files"].isNotEmpty)
+                            buildFilesList(_message?["files"], theme)
                         ]
                       )
                     )

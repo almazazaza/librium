@@ -20,30 +20,46 @@ class InboxMessageTile extends StatelessWidget {
         width: double.infinity,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12.0),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                message["sender"] ?? "Nieznany nadawca",
-                style: const TextStyle(
-                  fontSize: 16
-                )
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message["sender"] ?? "Nieznany nadawca",
+                      style: const TextStyle(
+                        fontSize: 16
+                      )
+                    ),
+                    Text(
+                      message["topic"] ?? "Bez tematu",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold
+                      )
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      message["date"] ?? "",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: theme.hintColor
+                      )
+                    )
+                  ]
+                ),
               ),
-              Text(
-                message["topic"] ?? "Bez tematu",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold
+              if (message["containsFiles"]) ...[
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.file_copy_outlined,
+                  size: 16,
+                  color: theme.colorScheme.onSurface
                 )
-              ),
-              const SizedBox(height: 4),
-              Text(
-                message["date"] ?? "",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: theme.hintColor
-                )
-              )
+              ]
             ]
           )
         )

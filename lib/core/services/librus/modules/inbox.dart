@@ -67,13 +67,13 @@ extension Inbox on Librus {
     
   }
   Future<Map<String, dynamic>> getMessage(final int? folderId, final int? messageId) async {
-    if (folderId == null && messageId == null) {
-      return {
-        "meta": null,
-        "planeText": null,
-        "links": null
-      };
-    }
+    final Map<String, dynamic> data = {
+      "meta": null,
+      "plainText": "",
+      "links": <String>[]
+    };
+
+    if (folderId == null && messageId == null) return data;
 
     try {
       final response = await _dio.get("$baseServerUrl/wiadomosci/1/$folderId/$messageId/f0");
@@ -81,55 +81,42 @@ extension Inbox on Librus {
       final document = html_parser.parse(response.data);
       final messageElement = document.querySelector("div.container-message-content");
 
-      if (messageElement == null) {
-        return {
-          "meta": null,
-          "plainText": "",
-          "links": <String>[]
-        };
-      }
+      if (messageElement == null) return data;
 
       replaceBreaksAndLinks(messageElement);
 
       final plainText = messageElement.text;
       final links = extractLinks(plainText);
-
+      final files = await getFiles(response);
 
       final metadataBefore = extractMetadataTable(messageElement.previousElementSibling);
       final metadataAfter = extractMetadataTable(messageElement.nextElementSibling);
 
       final sender = formatUser(metadataBefore["nadawca"] ?? "");
       final topic = metadataBefore["temat"] ?? "";
-      final sent = formatMessageDate(metadataBefore["wysłano"] ?? "");
-      final read = formatMessageDate(metadataAfter["przeczytano"] ?? "");
+      final sentAt = formatMessageDate(metadataBefore["wysłano"] ?? "");
+      final readAt = formatMessageDate(metadataAfter["przeczytano"] ?? "");
 
-      if (sender == "") {
-        final receiverData = extractReceiver(messageElement.nextElementSibling);
-        
-        final receiver = formatUser(receiverData["receiver"] ?? "");
-        final isRead = receiverData["isRead"];
+      data["meta"] = {};
+      data["plainText"] = plainText;
+      data["links"] = links;
+      if (files.isNotEmpty) data["files"] = files;
 
-        return {
-          "meta": {
-            "receiver": receiver,
-            "topic": topic,
-            "sent": sent,
-            "isRead": isRead,
-          },
-          "plainText": plainText,
-          "links": links
-        };
+      if (sender != "") {
+        data["meta"]["sender"] = sender;
+        data["meta"]["readAt"] = readAt;
       }
-      return {
-        "meta": {
-          "sender": sender,
-          "topic": topic,
-          "sent": sent,
-          "read": read,
-        },
-        "plainText": plainText,
-        "links": links,
-      };
+      else {
+        final receiverData = extractReceiver(messageElement.nextElementSibling);
+
+        data["meta"]["receiver"] = formatUser(receiverData["receiver"] ?? "");
+        data["meta"]["isRead"] = receiverData["isRead"];
+      }
+
+      data["meta"]["topic"] = topic;
+      data["meta"]["sentAt"] = sentAt;
+
+      return data;
     }
     catch (e) {
       throw Exception("$e");
@@ -232,26 +219,21 @@ extension Inbox on Librus {
     final bool isVirtualClass,
     {final int? classId}
   ) async {
-    FormData formData = FormData.fromMap({
-      "typAdresata": type,
-      "poprzednia": 5,
-      "tabZaznaczonych": "",
-      "czyWirtualneKlasy": isVirtualClass,
-      "idGrupy": groupId
-    });
+    final Map<String, dynamic> map = {};
+
+    map["typAdresata"] = type;
+    map["poprzednia"] = 5;
+    map["tabZaznaczonych"] = "";
+    map["czyWirtualneKlasy"] = isVirtualClass;
+    map["idGrupy"] = groupId;
 
     if (classId != null) {
-      formData = FormData.fromMap({
-        "typAdresata": type,
-        "poprzednia": 5,
-        "tabZaznaczonych": "",
-        "czyWirtualneKlasy": isVirtualClass,
-        "idGrupy": groupId,
-        "klasa_rada_rodzicow": classId,
-        "klasa_opiekunowie": classId,
-        "klasa_rodzice": classId,
-      });
+      map["klasa_rada_rodzicow"] = classId;
+      map["klasa_opiekunowie"] = classId;
+      map["klasa_rodzice"] = classId;
     }
+
+    FormData formData = FormData.fromMap(map);
 
     final response = await _dio.post(
       "$baseServerUrl/getRecipients",
@@ -299,11 +281,66 @@ extension Inbox on Librus {
       return null;
     }
   }
+  Future<List<Map<String, dynamic>>> getFiles(final Response response) async {
+    List<Map<String, dynamic>> data = [];
+
+    final document = html_parser.parse(response.data);
+    final messageContent = document.querySelector("div.container-message-content");
+
+    if (messageContent == null) return data;
+
+    final filesTable = messageContent.nextElementSibling;
+
+    if (filesTable == null) return data;
+
+    final rows = filesTable.querySelectorAll("tr");
+
+    if (rows.isEmpty) return data;
+    rows.removeAt(0);
+
+    for (final row in rows) {
+      final cells = row.querySelectorAll("td");
+
+      if (cells.length < 2) continue;
+
+      final fileName = cells[0].text.replaceAll(RegExp(r"\s+"), " ").trim();
+
+      final button = cells[1].querySelector("a img");
+      final onclick = button?.attributes["onclick"] ?? "";
+      final regex = RegExp(
+        r'otworz_w_nowym_oknie\s*\(\s*["]([^"]+)["]',
+        multiLine: true
+      );
+      final match = regex.firstMatch(onclick);
+
+      if (match == null) continue;
+
+      final fileLink = match.group(1)?.replaceAll(r'\/', '/');
+
+      final response = await _dio.get(
+        "$baseServerUrl$fileLink",
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+          followRedirects: true,
+          responseType: ResponseType.stream
+        )
+      );
+
+      final redirectedLink = response.realUri.toString();
+
+      data.add({
+        "fileName": fileName,
+        "link": redirectedLink
+      });
+    }
+    return data;
+  }
   Map<String, dynamic>? _parseInboxRow(final row) {
     final cells = row.querySelectorAll("td");
 
     if (cells.length < 6) return null;
 
+    final filesIcon = cells[1].querySelector("img.tooltip.existing-msg-files-icon");
     final sender = formatUser(cells[2].querySelector("a")?.text.trim() ?? "");
     final topic = cells[3].querySelector("a")?.text.trim();
 
@@ -330,7 +367,8 @@ extension Inbox on Librus {
       "topic": topic,
       "date": formattedDate,
       "folderId": folderId,
-      "messageId": messageId
+      "messageId": messageId,
+      "containsFiles": filesIcon != null
     };
   }
 }
