@@ -19,6 +19,7 @@ Aplikacja została stworzona przez ucznia technikum jako projekt hobbystyczny.
 
 - [Licencja](#licencja)
 - [Prywatność](#prywatność)
+- [Pobranie](#pobranie)
 - [Przykład działania aplikacji](#przykład-działania-aplikacji)
 - [Checklist planowanych modułów](#checklist-planowanych-modułów)
 - [Wymagania deweloperskie](#wymagania-deweloperskie)
@@ -50,11 +51,21 @@ Aplikacja nie przesyła danych użytkownika do żadnych serwerów innych niż of
 
 ---
 
+## Pobranie
+
+Pobranie każdej wersji jest dostępne na stronie [GitHub Releases](https://github.com/almazazaza/librium/releases/tag/v0.1.0-alpha).  
+  
+Automatyczne pobranie dla Android (5-16): [Pobierz](https://github.com/almazazaza/librium/releases/download/v0.1.0-alpha/librium-0.1a-universal.apk)
+
+---
+
 ## Przykład działania aplikacji
 
 Przykładowa demonstracja działania aplikacji, szczególnie demonstracja modułu wiadomości:
 
-![Demonstracja działania aplikacji](./preview.gif)
+<!-- ![Demonstracja działania aplikacji](./preview.gif) -->
+<img src="./preview.gif" width="400" alt="Demonstracja działania aplikacji">
+
 
 ---
 
